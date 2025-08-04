@@ -2,6 +2,9 @@
 
 A modern e-commerce web application built with React.js, featuring user authentication, product browsing, cart management, and search functionality.
 
+## Live Demo
+Deployed via Netlify. [https://ajio-project-clone.netlify.app/]
+
 ## Features
 
 ### Core Functionality
@@ -178,7 +181,17 @@ src/
 npm run build
 ```
 
-### Deploy to Netlify/Vercel
-1. Build the project
-2. Upload `build` folder to your hosting service
-3. Configure environment variables for Firebase
+### Deploy to Netlify
+1. Build the project locally
+2. Pushed the changes to git repository
+3. Hosted on Netlify: automatic build of the CRA project.
+4. Configure environment variables for Firebase on Netflify
+`REACT_APP_FIREBASE_API_KEY=your_api_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
+REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_bucket
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+REACT_APP_FIREBASE_APP_ID=your_app_id`
+5. Build command: npm run build
+6. Publish directory: build/
+

@@ -1,70 +1,184 @@
-# Getting Started with Create React App
+# AJIO Clone - E-commerce Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern e-commerce web application built with React.js, featuring user authentication, product browsing, cart management, and search functionality.
+
+## Features
+
+### Core Functionality
+- **User Authentication**: Login/Signup with Firebase Authentication
+- **Product Catalog**: Browse products from FakeStore API
+- **Search**: Real-time product search with dropdown suggestions
+- **Shopping Cart**: Add/remove items with quantity management
+- **Responsive Design**: Mobile-friendly interface with Bootstrap
+
+### Cart Management Modes
+- **Local Cart Mode**: Cart data stored in Redux (client-side)
+- **API Cart Mode**: Cart data managed via FakeStore API
+- **Persistent Storage**: Cart data persists across browser sessions
+
+### Technical Features
+- **State Management**: Redux Toolkit with Redux Persist
+- **Routing**: React Router for navigation
+- **UI Framework**: Bootstrap for responsive design
+- **API Integration**: FakeStore API for products and cart
+- **Real-time Updates**: Live cart count and search results
+
+## Tech Stack
+
+- **Frontend**: React.js 18
+- **State Management**: Redux Toolkit, Redux Persist
+- **Routing**: React Router DOM
+- **Authentication**: Firebase Auth
+- **UI Framework**: Bootstrap 5
+- **API**: FakeStore API
+- **Build Tool**: Create React App
+- **Styling**: CSS3, Bootstrap
+
+## Installation & Setup
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+- Firebase project (for authentication)
+
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd ajio-frontend
+```
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Firebase Configuration
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable Authentication with Email/Password
+3. Create `src/firebase.jsx` with your Firebase config:
+
+```javascript
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+
+const firebaseConfig = {
+  apiKey: "your-api-key",
+  authDomain: "your-auth-domain",
+  projectId: "your-project-id",
+  storageBucket: "your-storage-bucket",
+  messagingSenderId: "your-messaging-sender-id",
+  appId: "your-app-id"
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+```
+
+### 4. Start Development Server
+```bash
+npm start
+```
+
+The application will open at `http://localhost:3000`
+
+## Usage Guide
+
+### Getting Started
+1. **Home Page**: Browse all available products
+2. **Search**: Use the search bar to find specific products
+3. **Authentication**: Sign up or login to manage your cart
+4. **Shopping**: Add products to cart and manage quantities
+5. **Cart**: View and modify your cart items
+
+### Cart Modes
+**Local Cart Mode** (Default):
+- Cart stored in browser's local storage
+- Faster performance
+- Data persists across sessions
+- No API calls for cart operations
+
+**API Cart Mode**:
+- Cart managed via FakeStore API
+- Simulates real e-commerce backend
+- Cart ID persists until logout
+- Requires API calls for cart operations
+
+### Key Pages
+- `/` - Home page with product grid and search
+- `/login` - User authentication
+- `/signup` - User registration
+- `/product/:id` - Product details page
+- `/cart` - Shopping cart management
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── Navbar.jsx      # Navigation bar with cart count
+│   ├── ProductCard.jsx # Product display card
+│   ├── SearchBar.jsx   # Search functionality
+│   └── ProtectedRoute.jsx # Route protection
+├── pages/              # Main application pages
+│   ├── Home.jsx        # Home page with products
+│   ├── Login.jsx       # Authentication page
+│   ├── Signup.jsx      # Registration page
+│   ├── ProductDetail.jsx # Product details
+│   └── CartPage.jsx    # Cart management
+├── features/           # Redux slices
+│   └── userCart/       # Cart state management
+├── utils/              # Utility functions
+│   ├── cartService.js  # Unified cart operations
+│   └── cartUtils.js    # Cart helper functions
+├── api/                # API integration
+│   └── fakeStoreCart.js # FakeStore API calls
+├── hooks/              # Custom React hooks
+│   └── useCart.js      # Cart-related hooks
+├── firebase.jsx        # Firebase configuration
+├── store.jsx          # Redux store setup
+└── index.css          # Global styles
+```
 
 ## Available Scripts
 
-In the project directory, you can run:
+- `npm start` - Start development server
+- `npm build` - Build for production
+- `npm test` - Run test suite
+- `npm eject` - Eject from Create React App
 
-### `npm start`
+## Key Features Explained
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Search Functionality
+- Real-time search as you type
+- Dropdown with product suggestions
+- Click to navigate to product details
+- Shows all products by default
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Cart Management
+- Unified service for both local and API modes
+- Persistent cart across browser sessions
+- Real-time cart count updates
+- Add, remove, and update quantities
 
-### `npm test`
+### State Management
+- Redux Toolkit for efficient state management
+- Redux Persist for data persistence
+- Memoized selectors to prevent unnecessary re-renders
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Authentication Flow
+- Firebase Authentication integration
+- Protected routes for cart functionality
+- User session management
+- Automatic cart initialization
 
-### `npm run build`
+## Deployment
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Build for Production
+```bash
+npm run build
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Deploy to Netlify/Vercel
+1. Build the project
+2. Upload `build` folder to your hosting service
+3. Configure environment variables for Firebase

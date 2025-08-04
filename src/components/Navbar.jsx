@@ -1,29 +1,36 @@
-// src/components/Navbar.jsx
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-
-// Selector: adjust path if your slice file is elsewhere
-import { selectCartItems } from '../features/cart/cartSlice';
+import { setCurrentUserId, clearUserCart } from '../features/userCart/userCartSlice';
+import { useCartCount } from '../hooks/useCart';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const cartItems = useSelector(selectCartItems);
+  const dispatch = useDispatch();
+  const { cartCount } = useCartCount();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
+      if (u) {
+        dispatch(setCurrentUserId(u.uid));
+      } else {
+        // Clear cart when user logs out
+        dispatch(clearUserCart());
+      }
     });
     return () => unsub();
-  }, []);
+  }, [dispatch]);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      dispatch(clearUserCart());
       toast.success('Logged out');
       navigate('/login');
     } catch (err) {
@@ -31,8 +38,6 @@ const Navbar = () => {
       toast.error('Logout failed');
     }
   };
-
-  const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   return (
     <nav className="navbar-custom d-flex align-items-center justify-content-between">
@@ -48,7 +53,23 @@ const Navbar = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <Link to="/cart" className="nav-link" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           🛒
-          {cartCount > 0 && <span className="badge-cart">{cartCount}</span>}
+          {cartCount > 0 && (
+            <span
+              className="badge-cart"
+              style={{
+                position: 'absolute',
+                top: -5,
+                right: -10,
+                background: 'red',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '2px 6px',
+                fontSize: 12,
+              }}
+            >
+              {cartCount}
+            </span>
+          )}
         </Link>
         {user ? (
           <>

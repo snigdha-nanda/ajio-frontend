@@ -5,6 +5,7 @@ import { addToCart } from '../features/cart/cartSlice';
 import { useDispatch } from 'react-redux';
 import { auth } from '../firebase';
 import { toast } from 'react-toastify';
+import Navbar from '../components/Navbar';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -63,51 +64,63 @@ const ProductDetail = () => {
 
   if (loading)
     return (
-      <div className="container my-5">
-        <div className="text-center">Loading product...</div>
-      </div>
+      <>
+        <Navbar />
+        <div className="container my-5">
+          <div className="text-center">Loading product...</div>
+        </div>
+      </>
     );
 
   if (error)
     return (
-      <div className="container my-5">
-        <div className="alert alert-danger">{error}</div>
-      </div>
+      <>
+        <Navbar />
+        <div className="container my-5">
+          <div className="alert alert-danger">{error}</div>
+        </div>
+      </>
     );
 
   if (!product)
     return (
-      <div className="container my-5">
-        <div className="alert alert-warning">Product not found.</div>
-      </div>
+      <>
+        <Navbar />
+        <div className="container my-5">
+          <div className="alert alert-warning">Product not found.</div>
+        </div>
+      </>
     );
 
   return (
-    <div className="container my-5">
-      <div className="row g-4">
-        <div className="col-md-6 text-center">
-          <img
-            src={product.image}
-            alt={product.title}
-            className="img-fluid"
-            style={{ maxHeight: 400, objectFit: 'contain' }}
-          />
-        </div>
-        <div className="col-md-6">
-          <h2 className="fw-bold">{product.title}</h2>
-          <p className="fw-bold h4">${product.price}</p>
-          <p className="lead">{product.description}</p>
-          <div className="d-flex gap-2">
-            <button className="btn btn-primary" onClick={handleAdd}>
-              Add to Cart
-            </button>
-            <button className="btn btn-outline-secondary" onClick={handleAdd}>
-              Buy Now
-            </button>
+    <>
+      <Navbar />
+      <div className="container my-5">
+        <div className="row g-4">
+          <div className="col-md-6 text-center">
+            <img
+              src={product.image}
+              alt={product.title}
+              className="img-fluid"
+              style={{ maxHeight: 400, objectFit: 'contain' }}
+            />
+          </div>
+          <div className="col-md-6">
+            <h2 className="fw-bold">{product.title}</h2>
+            <p className="fw-bold h4">${product.price}</p>
+            <p className="lead">{product.description}</p>
+            <div className="d-flex gap-2">
+              <button className="btn btn-primary" onClick={handleAdd}>
+                Add to Cart
+              </button>
+              <button className="btn btn-outline-secondary" onClick={handleAdd}>
+                Buy Now
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -7,6 +7,7 @@ import {
   clearCart,
 } from '../features/cart/cartSlice';
 import { toast } from 'react-toastify';
+import Navbar from '../components/Navbar';
 
 const CartPage = () => {
   const items = useSelector(state => state.cart.items);
@@ -42,6 +43,8 @@ const CartPage = () => {
   };
 
   return (
+    <>
+    <Navbar />
     <div className="container my-5">
       <h3 className="mb-4 fw-bold">Your Cart</h3>
 
@@ -127,6 +130,7 @@ const CartPage = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

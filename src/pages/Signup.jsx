@@ -9,6 +9,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { handlePostAuthIntent } from '../utils/handlePostAuthIntent';
+import Navbar from '../components/Navbar';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -70,6 +71,8 @@ const Signup = () => {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="container my-5" style={{ maxWidth: 480 }}>
       <div className="text-center mb-4">
         <h1 className="fw-bold">Sign Up</h1>
@@ -138,6 +141,7 @@ const Signup = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

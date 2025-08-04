@@ -9,6 +9,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { handlePostAuthIntent } from '../utils/handlePostAuthIntent';
+import Navbar from '../components/Navbar';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ const Login = () => {
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email address.');
       } else {
-        setError(err.message || 'Login failed.');
+        setError('Login failed.');
       }
     } finally {
       setLoading(false);
@@ -71,6 +72,8 @@ const Login = () => {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="container my-5" style={{ maxWidth: 480 }}>
       <div className="text-center mb-4">
         <h1 className="fw-bold">Log In</h1>
@@ -139,6 +142,7 @@ const Login = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

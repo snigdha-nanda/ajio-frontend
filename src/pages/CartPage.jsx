@@ -175,7 +175,7 @@ const CartPage = () => {
                       <div className="col-6">
                         <div className="card-body">
                           <h6 className="card-title">{meta.title || 'Loading...'}</h6>
-                          <p className="mb-1">₹{meta.price?.toFixed(2) || '—'}</p>
+                          <p className="mb-1">${meta.price?.toFixed(2) || '—'}</p>
                           <div className="d-flex align-items-center gap-2">
                             <label className="form-label mb-0 me-2">Qty:</label>
                             <input
@@ -235,7 +235,7 @@ const CartPage = () => {
               <div className="card p-3 shadow">
                 <h5 className="mb-3 fw-bold">Order Summary</h5>
                 <p className="mb-1">Items: {totalItems}</p>
-                <p className="mb-1">Subtotal: ₹{subtotal.toFixed(2)}</p>
+                <p className="mb-1">Subtotal: ${subtotal.toFixed(2)}</p>
                 <hr />
                 <div className="d-grid">
                   <button

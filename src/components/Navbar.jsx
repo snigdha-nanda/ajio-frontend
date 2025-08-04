@@ -50,7 +50,7 @@ const Navbar = () => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <Link to="/cart" className="nav-link" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <Link to="/cart" className="nav-link" style={{ position: 'relative', display: 'flex', alignItems: 'center', background:'#fff9f2' }}>
           🛒
           {cartCount > 0 && (
             <span
@@ -72,7 +72,7 @@ const Navbar = () => {
         </Link>
         {user ? (
           <>
-            <span style={{ marginRight: 8, fontWeight: 500 }}>
+            <span style={{ marginRight: 8, fontWeight: 500, color:'#fff9f2' }}>
               Hi, {user.email ? user.email.split('@')[0] : 'User'}
             </span>
             <button className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>

@@ -186,7 +186,7 @@ const ProductDetail = () => {
           </div>
           <div className="col-md-6">
             <h2 className="fw-bold">{product.title}</h2>
-            <p className="fw-bold h4">₹ {product.price}</p>
+            <p className="fw-bold h4">$ {product.price}</p>
             <p className="lead">{product.description}</p>
             <div className="d-flex gap-2">
               <button
@@ -195,13 +195,6 @@ const ProductDetail = () => {
                 disabled={adding || !product}
               >
                 {adding ? 'Adding...' : 'Add to Cart'}
-              </button>
-              <button
-                className="btn btn-outline-secondary"
-                onClick={handleAddToCart}
-                disabled={adding || !product}
-              >
-                Buy Now
               </button>
             </div>
           </div>

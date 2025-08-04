@@ -99,9 +99,6 @@ const SearchBar = () => {
               ✕
             </button>
           )}
-          <button className="btn btn-primary" type="button">
-            🔍
-          </button>
         </div>
       </div>
 

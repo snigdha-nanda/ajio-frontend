@@ -27,6 +27,7 @@ import {
   setUseLocalCart,
   selectUseLocalCart,
 } from '../features/userCart/userCartSlice';
+import './Signup.css';
 
 const Signup = () => {
   const navigate = useNavigate();

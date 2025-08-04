@@ -10,6 +10,7 @@ import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { handlePostAuthIntent } from '../utils/handlePostAuthIntent';
 import Navbar from '../components/Navbar';
+import { setUserId, setCartId } from '../features/user/userSlice';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -46,8 +47,24 @@ const Signup = () => {
     }
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+      dispatch(setUserId(user.uid));
+
       toast.success('Signup successful');
+
+      const response = await fetch('https://fakestoreapi.com/carts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.uid, 
+          date: new Date().toISOString().split('T')[0], 
+          products: [] 
+        })
+      });
+      const cartData = await response.json();
+      dispatch(setCartId(cartData.id));
+      
       handlePostAuthIntent({
         intended: location.state?.intended,
         dispatch,

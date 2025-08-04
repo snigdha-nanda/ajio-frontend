@@ -1,4 +1,3 @@
-// src/pages/CartPage.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -25,7 +24,6 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [productsMeta, setProductsMeta] = useState({});
   const [updating, setUpdating] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Ensure auth/cart linkage on login
   useEffect(() => {
@@ -107,9 +105,7 @@ const CartPage = () => {
 
   useEffect(() => {
     loadCart();
-  }, [cartId, refreshTrigger, loadCart]);
-
-  const refresh = () => setRefreshTrigger((t) => t + 1);
+  }, [cartId, loadCart]);
 
   const handleRemove = async (productId) => {
     if (updating || !cartId || !effectiveUserId) return;

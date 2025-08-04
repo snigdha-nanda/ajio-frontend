@@ -1,4 +1,3 @@
-// src/hooks/useCart.js
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUserCartMeta } from '../features/userCart/userCartSlice';
 import { CartService } from '../utils/cartService';

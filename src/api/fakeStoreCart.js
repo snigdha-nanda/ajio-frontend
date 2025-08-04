@@ -1,4 +1,3 @@
-// src/api/fakeStoreCart.js
 const BASE = 'https://fakestoreapi.com';
 
 /**

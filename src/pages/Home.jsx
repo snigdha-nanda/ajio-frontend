@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useEffect, useState } from 'react';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';

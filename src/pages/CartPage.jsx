@@ -1,9 +1,8 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   selectUserCartMeta,
-  setCartId,
-  setCurrentUserId,
 } from '../features/userCart/userCartSlice';
 import {
   fetchCart,
@@ -12,103 +11,56 @@ import {
 } from '../api/fakeStoreCart';
 import Navbar from '../components/Navbar';
 import { toast } from 'react-toastify';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase';
 
 const CartPage = () => {
   const dispatch = useDispatch();
   const { cartId, currentUserId, fakeStoreUserId } = useSelector(selectUserCartMeta);
-  const effectiveUserId = fakeStoreUserId || currentUserId;
-
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [productsMeta, setProductsMeta] = useState({});
+  const [productsMeta, setProductsMeta] = useState({}); 
   const [updating, setUpdating] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  // Ensure auth/cart linkage on login
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        dispatch(setCurrentUserId(user.uid));
-        if (!cartId) {
-          try {
-            const resp = await fetch('https://fakestoreapi.com/carts', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: user.uid,
-                date: new Date().toISOString().split('T')[0],
-                products: [],
-              }),
-            });
-            if (resp.ok) {
-              const cartData = await resp.json();
-              dispatch(setCartId(cartData.id));
-            } else {
-              console.warn('Failed to create cart on login:', resp.statusText);
-            }
-          } catch (e) {
-            console.warn('Error creating cart on login:', e);
-          }
-        }
-      }
-    });
-    return () => unsub();
-  }, [cartId, dispatch]);
+  const effectiveUserId = fakeStoreUserId || currentUserId;
 
-  // Load cart with simple retry
-  const loadCart = useCallback(
-    async (retryCount = 2) => {
-      if (!cartId) {
-        setCart(null);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      try {
-        const fetched = await fetchCart(cartId);
-        setCart(fetched);
+  const loadCart = useCallback(async () => {
+    if (!cartId) {
+      setCart(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const fetched = await fetchCart(cartId);
+      setCart(fetched);
 
-        // Fetch product metadata
-        if (fetched.products && fetched.products.length > 0) {
-          const metas = await Promise.all(
-            fetched.products.map((p) =>
-              fetch(`https://fakestoreapi.com/products/${p.productId}`)
-                .then((r) => {
-                  if (!r.ok) throw new Error(`Failed product fetch ${p.productId}`);
-                  return r.json();
-                })
-                .catch(() => null)
-            )
-          );
-          const metaMap = {};
-          metas.forEach((m) => {
-            if (m && m.id) metaMap[m.id] = m;
-          });
-          setProductsMeta(metaMap);
-        } else {
-          setProductsMeta({});
-        }
-      } catch (err) {
-        if (retryCount > 0) {
-          setTimeout(() => loadCart(retryCount - 1), 300);
-        } else {
-          console.error('Failed to load cart after retries:', err);
-          toast.error('Failed to load cart.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    },
-    [cartId]
-  );
+      
+      const productFetches = fetched.products.map((p) =>
+        fetch(`https://fakestoreapi.com/products/${p.productId}`).then((r) => {
+          if (!r.ok) throw new Error('Failed to fetch product ' + p.productId);
+          return r.json();
+        })
+      );
+      const metas = await Promise.all(productFetches);
+      const metaMap = {};
+      metas.forEach((m) => {
+        metaMap[m.id] = m;
+      });
+      setProductsMeta(metaMap);
+    } catch (err) {
+      console.error('Failed to load cart:', err);
+      toast.error('Failed to load cart.');
+    } finally {
+      setLoading(false);
+    }
+  }, [cartId]);
 
   useEffect(() => {
     loadCart();
-  }, [cartId, loadCart]);
+  }, [loadCart]);
 
   const handleRemove = async (productId) => {
-    if (updating || !cartId || !effectiveUserId) return;
+    if (!cartId || !effectiveUserId) return;
     setUpdating(true);
     try {
       await removeItemFromCart(cartId, effectiveUserId, productId);
@@ -123,7 +75,7 @@ const CartPage = () => {
   };
 
   const handleQuantityChange = async (productId, newQty) => {
-    if (updating || !cartId || !effectiveUserId) return;
+    if (!cartId || !effectiveUserId) return;
     if (newQty < 1) return;
     setUpdating(true);
     try {
@@ -138,13 +90,23 @@ const CartPage = () => {
     }
   };
 
-  const items = cart?.products || [];
-  const totalItems = items.reduce((sum, p) => sum + (p.quantity || 0), 0);
-  const subtotal = items.reduce((sum, p) => {
-    const meta = productsMeta[p.productId];
-    const price = meta ? meta.price : 0;
-    return sum + price * (p.quantity || 0);
-  }, 0);
+  const handlePayment = (e) => {
+    e.preventDefault();
+    toast.success('Payment processed successfully! (Demo)');
+    setShowPaymentModal(false);
+  };
+
+  const totalItems = cart
+    ? cart.products.reduce((sum, p) => sum + (p.quantity || 0), 0)
+    : 0;
+
+  const subtotal = cart
+    ? cart.products.reduce((sum, p) => {
+        const meta = productsMeta[p.productId];
+        const price = meta ? meta.price : 0;
+        return sum + price * (p.quantity || 0);
+      }, 0)
+    : 0;
 
   return (
     <>
@@ -154,12 +116,12 @@ const CartPage = () => {
 
         {loading ? (
           <div className="text-center">Loading cart...</div>
-        ) : !items || items.length === 0 ? (
+        ) : !cart || cart.products.length === 0 ? (
           <div className="alert alert-info">Your cart is empty.</div>
         ) : (
           <div className="row">
             <div className="col-md-8">
-              {items.map((item) => {
+              {cart.products.map((item) => {
                 const meta = productsMeta[item.productId] || {};
                 return (
                   <div className="card mb-3" key={item.productId}>
@@ -175,7 +137,7 @@ const CartPage = () => {
                       <div className="col-6">
                         <div className="card-body">
                           <h6 className="card-title">{meta.title || 'Loading...'}</h6>
-                          <p className="mb-1">${meta.price?.toFixed(2) || '—'}</p>
+                          <p className="mb-1">₹{meta.price?.toFixed(2) || '—'}</p>
                           <div className="d-flex align-items-center gap-2">
                             <label className="form-label mb-0 me-2">Qty:</label>
                             <input
@@ -216,13 +178,10 @@ const CartPage = () => {
                 <button
                   className="btn btn-secondary"
                   onClick={() => {
-                    // clear sequentially to avoid race
-                    (async () => {
-                      for (const p of items) {
-                        // eslint-disable-next-line no-await-in-loop
-                        await handleRemove(p.productId);
-                      }
-                    })();
+                    
+                    cart.products.forEach((p) =>
+                      handleRemove(p.productId)
+                    );
                   }}
                   disabled={updating}
                 >
@@ -235,22 +194,123 @@ const CartPage = () => {
               <div className="card p-3 shadow">
                 <h5 className="mb-3 fw-bold">Order Summary</h5>
                 <p className="mb-1">Items: {totalItems}</p>
-                <p className="mb-1">Subtotal: ${subtotal.toFixed(2)}</p>
+                <p className="mb-1">Subtotal: ₹{subtotal.toFixed(2)}</p>
                 <hr />
                 <div className="d-grid">
                   <button
                     className="btn btn-primary"
-                    onClick={() => toast.info('Proceeding to checkout...')}
-                    disabled={items.length === 0 || updating}
+                    onClick={() => setShowPaymentModal(true)}
+                    disabled={cart.products.length === 0 || updating}
                   >
                     Proceed to Checkout
                   </button>
                 </div>
-                {items.length === 0 && (
+                {cart.products.length === 0 && (
                   <small className="text-muted">
                     Add items to enable checkout.
                   </small>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Modal */}
+        {showPaymentModal && (
+          <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Payment Details</h5>
+                  <button 
+                    type="button" 
+                    className="btn-close" 
+                    onClick={() => setShowPaymentModal(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <form onSubmit={handlePayment}>
+                    <div className="row">
+                      <div className="col-md-6">
+                        <h6 className="mb-3">Billing Information</h6>
+                        <div className="mb-3">
+                          <label className="form-label">Full Name</label>
+                          <input type="text" className="form-control" placeholder="John Doe" required />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Email</label>
+                          <input type="email" className="form-control" placeholder="john@example.com" required />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Phone</label>
+                          <input type="tel" className="form-control" placeholder="+91 9876543210" required />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Address</label>
+                          <textarea className="form-control" rows="3" placeholder="Enter your address" required></textarea>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <h6 className="mb-3">Payment Information</h6>
+                        <div className="mb-3">
+                          <label className="form-label">Card Number</label>
+                          <input type="text" className="form-control" placeholder="1234 5678 9012 3456" required />
+                        </div>
+                        <div className="row">
+                          <div className="col-6">
+                            <div className="mb-3">
+                              <label className="form-label">Expiry Date</label>
+                              <input type="text" className="form-control" placeholder="MM/YY" required />
+                            </div>
+                          </div>
+                          <div className="col-6">
+                            <div className="mb-3">
+                              <label className="form-label">CVV</label>
+                              <input type="text" className="form-control" placeholder="123" required />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Cardholder Name</label>
+                          <input type="text" className="form-control" placeholder="John Doe" required />
+                        </div>
+                        
+                        <div className="bg-light p-3 rounded mt-4">
+                          <h6>Order Summary</h6>
+                          <div className="d-flex justify-content-between">
+                            <span>Items ({totalItems}):</span>
+                            <span>₹{subtotal.toFixed(2)}</span>
+                          </div>
+                          <div className="d-flex justify-content-between">
+                            <span>Shipping:</span>
+                            <span>₹50.00</span>
+                          </div>
+                          <hr />
+                          <div className="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span>₹{(subtotal + 50).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    onClick={() => setShowPaymentModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-success"
+                    onClick={handlePayment}
+                  >
+                    Pay ₹{(subtotal + 50).toFixed(2)}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -9,30 +9,27 @@
  * - Toast notifications for user feedback
  * - Clean route structure
  */
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home.jsx';
-import Login from './pages/Login.jsx';
+import Login from './pages/Login.jsx'; // adjust extension/path if .jsx or .js
 import Signup from './pages/Signup.jsx';
 import ProductDetail from './pages/ProductDetail.jsx';
-import CartPage from './pages/CartPage.jsx';
+import CartPage from './pages/CartPage.jsx'; // or Cart.js depending on your filename
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
     <>
-      {/* Toast notifications container */}
       <ToastContainer position="top-right" />
-      
-      {/* Main application routes */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<CartPage />} />
+        {/* add additional protected or fallback routes as needed */}
       </Routes>
     </>
   );

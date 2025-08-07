@@ -20,7 +20,7 @@ const SearchBar = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch all products on component mount
+  
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
@@ -28,7 +28,7 @@ const SearchBar = () => {
         const res = await fetch('https://fakestoreapi.com/products');
         const data = await res.json();
         setAllProducts(data);
-        setSearchResults(data); // Initially show all products in dropdown
+        setSearchResults(data); 
       } catch (err) {
         console.error('Failed to fetch products for search:', err);
       } finally {
@@ -38,10 +38,10 @@ const SearchBar = () => {
     fetchAllProducts();
   }, []);
 
-  // Filter products based on search term
+  
   useEffect(() => {
     if (searchTerm.trim() === '') {
-      // Show all products when search is empty
+      
       setSearchResults(allProducts);
       return;
     }
@@ -73,13 +73,13 @@ const SearchBar = () => {
   };
 
   const handleInputBlur = () => {
-    // Delay hiding dropdown to allow clicks on items
+    
     setTimeout(() => setShowDropdown(false), 200);
   };
 
   return (
-    <div className="search-container position-relative" style={{ maxWidth: '500px', margin: '0 auto' }}>
-      <div className="input-group">
+    <div style={{ position: 'relative', maxWidth: '500px', margin: '0 auto' }}>
+      <div style={{ display: 'flex' }}>
         <input
           type="text"
           className="form-control"
@@ -88,65 +88,99 @@ const SearchBar = () => {
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
+          style={{ flex: 1 }}
         />
-        <div className="input-group-append">
-          {searchTerm && (
-            <button
-              className="btn btn-outline-secondary"
-              type="button"
-              onClick={handleClearSearch}
-            >
-              ✕
-            </button>
-          )}
-        </div>
+        {searchTerm && (
+          <button
+            className="btn-outline"
+            type="button"
+            onClick={handleClearSearch}
+            style={{ marginLeft: '0.5rem', padding: '0.5rem 1rem' }}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Search Results Dropdown */}
       {showDropdown && (
         <div 
-          className="search-dropdown position-absolute w-100 bg-white border rounded shadow-lg"
-          style={{ top: '100%', zIndex: 1000, maxHeight: '400px', overflowY: 'auto' }}
+          style={{ 
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: 'var(--color-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius)',
+            boxShadow: 'var(--shadow)',
+            zIndex: 1000,
+            maxHeight: '400px',
+            overflowY: 'auto'
+          }}
         >
           {loading ? (
-            <div className="p-3 text-center text-muted">Loading products...</div>
+            <div style={{ padding: '1rem', textAlign: 'center', color: '#5f4d6a' }}>Loading products...</div>
           ) : searchResults.length > 0 ? (
             <>
               {searchResults.slice(0, 8).map(product => (
                 <div
                   key={product.id}
-                  className="search-result-item p-2 border-bottom cursor-pointer"
-                  style={{ cursor: 'pointer' }}
+                  style={{ 
+                    padding: '0.75rem',
+                    borderBottom: '1px solid var(--color-border)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
                   onClick={() => handleProductClick(product.id)}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--color-bg)'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                 >
-                  <div className="d-flex align-items-center">
-                    <img
-                      src={product.image}
-                      alt={product.title}
-                      style={{ width: '40px', height: '40px', objectFit: 'contain' }}
-                      className="me-3"
-                    />
-                    <div>
-                      <div className="fw-bold" style={{ fontSize: '14px' }}>
-                        {product.title.length > 50 ? product.title.substring(0, 50) + '...' : product.title}
-                      </div>
-                      <div className="text-muted" style={{ fontSize: '12px' }}>
-                        ₹{product.price} • {product.category}
-                      </div>
+                  <img
+                    src={product.image}
+                    alt={product.title}
+                    style={{ 
+                      width: '40px', 
+                      height: '40px', 
+                      objectFit: 'contain',
+                      marginRight: '0.75rem'
+                    }}
+                  />
+                  <div>
+                    <div style={{ 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      color: 'var(--color-primary)'
+                    }}>
+                      {product.title.length > 50 ? product.title.substring(0, 50) + '...' : product.title}
+                    </div>
+                    <div style={{ 
+                      color: '#5f4d6a', 
+                      fontSize: '12px'
+                    }}>
+                      ${product.price} • {product.category}
                     </div>
                   </div>
                 </div>
               ))}
               {searchResults.length > 8 && (
-                <div className="p-2 text-center text-muted" style={{ fontSize: '12px' }}>
+                <div style={{ 
+                  padding: '0.5rem', 
+                  textAlign: 'center', 
+                  color: '#5f4d6a',
+                  fontSize: '12px'
+                }}>
                   {searchResults.length - 8} more results...
                 </div>
               )}
             </>
           ) : (
-            <div className="p-3 text-center text-muted">
+            <div style={{ 
+              padding: '1rem', 
+              textAlign: 'center', 
+              color: '#5f4d6a'
+            }}>
               No products found for "{searchTerm}"
             </div>
           )}

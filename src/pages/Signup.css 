@@ -1,0 +1,4 @@
+/* src/pages/Signup.css */
+form {
+  width: 100%;
+}

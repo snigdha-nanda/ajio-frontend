@@ -1,29 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import ProductCard from '../components/ProductCard';
+import React from 'react';
 import Navbar from '../components/Navbar';
 import SearchBar from '../components/SearchBar';
+import Carousel from '../components/Carousel';
+import SaleSection from '../components/SaleSection';
+import TopBrands from '../components/TopBrands';
+import Footer from '../components/Footer';
 
 const Home = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch products - always show ALL products on home page
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch('https://fakestoreapi.com/products');
-        const data = await res.json();
-        setProducts(data);
-      } catch (err) {
-        console.error('Failed to fetch products', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
-
   return (
     <>
       <Navbar />
@@ -37,35 +20,18 @@ const Home = () => {
         <SearchBar />
       </div>
 
-      <div className="container" style={{ maxWidth: 1200, margin: '0 auto' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <p>Loading products...</p>
-          </div>
-        ) : (
-          <>
-            {/* Always show all products count */}
-            <div className="mb-3">
-              <p className="text-muted">
-                Showing all {products.length} products
-              </p>
-            </div>
-            
-            <div className="product-grid">
-              {products.length > 0 ? (
-                products.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))
-              ) : (
-                <div className="text-center py-5">
-                  <h4>No products available</h4>
-                  <p className="text-muted">Please try again later</p>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+      {/* Carousel Section */}
+      <div className="container" style={{ maxWidth: 1200, margin: '0 auto', marginBottom: '2rem' }}>
+        <Carousel />
       </div>
+
+      {/* Sale Section */}
+      <SaleSection />
+
+      {/* Top Brands Section */}
+      <TopBrands />
+
+      <Footer />
     </>
   );
 };

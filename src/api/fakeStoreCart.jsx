@@ -1,30 +1,5 @@
+// src/api/fakeStoreCart.js
 const BASE = 'https://fakestoreapi.com';
-
-/**
- * Create a new cart for a user
- * @param {string} userId - Firebase UID
- */
-export async function createCart(userId) {
-  if (!userId) throw new Error('createCart: userId is required');
-  
-  const body = {
-    userId,
-    date: new Date().toISOString().split('T')[0],
-    products: [],
-  };
-  
-  const res = await fetch(`${BASE}/carts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  
-  if (!res.ok) {
-    throw new Error(`Failed to create cart: ${res.status} ${res.statusText}`);
-  }
-  
-  return res.json(); // { id, userId, date, products: [] }
-}
 
 /**
  * Fetch the full cart object from FakeStore.
@@ -36,25 +11,7 @@ export async function fetchCart(cartId) {
   if (!res.ok) {
     throw new Error(`Failed to fetch cart: ${res.status} ${res.statusText}`);
   }
-  
-  const data = await res.json();
-  
-  // Handle mock API limitation - if cart doesn't exist, return empty cart
-  if (!data || data === null) {
-    return {
-      id: cartId,
-      userId: null,
-      date: new Date().toISOString().split('T')[0],
-      products: []
-    };
-  }
-  
-  // Ensure products array exists
-  if (!data.products) {
-    data.products = [];
-  }
-  
-  return data;
+  return res.json(); // { id, userId, date, products: [...] }
 }
 
 /**
@@ -66,23 +23,22 @@ export async function fetchCart(cartId) {
 export async function updateCart(cartId, products, userId) {
   if (!cartId) throw new Error('updateCart: cartId is required');
   if (!userId) throw new Error('updateCart: userId is required');
-  
   const body = {
     userId,
     date: new Date().toISOString().split('T')[0],
     products,
   };
-  
+  console.log("check if it is coming here-22", body);
   const res = await fetch(`${BASE}/carts/${cartId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  
+  console.log("check if it is coming here-33");
   if (!res.ok) {
     throw new Error(`Failed to update cart: ${res.status} ${res.statusText}`);
   }
-  
+  console.log("check if it is coming here-10");
   return res.json();
 }
 
@@ -99,13 +55,12 @@ export async function addItemToCart(cartId, userId, productToAdd) {
     throw new Error('addItemToCart: productToAdd.productId is required');
   }
 
-  console.log('Adding item to cart:', { cartId, userId, productToAdd });
-
   const cart = await fetchCart(cartId);
-  console.log('Current cart:', cart);
+  console.log("check if it is coming here-2");
 
   const existing = cart.products.find((p) => p.productId === productToAdd.productId);
-  console.log('Existing product:', existing);
+
+  console.log("check if it is coming here-3");
 
   let updatedProducts;
   if (existing) {
@@ -117,9 +72,7 @@ export async function addItemToCart(cartId, userId, productToAdd) {
   } else {
     updatedProducts = [...cart.products, productToAdd];
   }
-  
-  console.log('Updated products:', updatedProducts);
-  
+  console.log("check if it is coming here-4");
   return updateCart(cartId, updatedProducts, userId);
 }
 

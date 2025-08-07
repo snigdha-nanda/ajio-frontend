@@ -9,7 +9,6 @@
  * - Post-signup cart initialization
  * - Redirect to intended page after signup
  */
-
 import React, { useState, useEffect } from 'react';
 import {
   createUserWithEmailAndPassword,
@@ -19,15 +18,13 @@ import { auth } from '../firebase';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-import { createAndStoreCart } from '../utils/cartUtils';
+import { handlePostAuthIntent } from '../utils/handlePostAuthIntent';
 import Navbar from '../components/Navbar';
 import {
   setCurrentUserId,
+  setCartId,
   selectCartId,
-  setUseLocalCart,
-  selectUseLocalCart,
 } from '../features/userCart/userCartSlice';
-import './Signup.css';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -35,47 +32,61 @@ const Signup = () => {
   const dispatch = useDispatch();
 
   const existingCartId = useSelector(selectCartId);
-  const useLocalCart = useSelector(selectUseLocalCart);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         dispatch(setCurrentUserId(user.uid));
 
-        // Only create API cart if not using local cart and no existing cart
-        if (!useLocalCart && !existingCartId) {
-          await createAndStoreCart(user.uid, dispatch, existingCartId);
+        if (!existingCartId) {
+          try {
+            const resp = await fetch('https://fakestoreapi.com/carts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: user.uid,
+                date: new Date().toISOString().split('T')[0],
+                products: [],
+              }),
+            });
+            if (resp.ok) {
+              const cartData = await resp.json();
+              dispatch(setCartId(cartData.id));
+            } else {
+              console.warn('Failed to create cart on auth state change:', resp.statusText);
+            }
+          } catch (e) {
+            console.warn('Error creating cart on auth state change:', e);
+          }
         }
 
-        // Handle post-auth redirect
-        const intended = location.state?.intended;
-        if (intended?.action === 'add-to-cart') {
-          toast.success('Account created! You can now add items to cart.');
-          navigate(`/product/${intended.product.id}`);
-        } else {
-          navigate(location.state?.from || '/');
-        }
+        handlePostAuthIntent({
+          intended: location.state?.intended,
+          dispatch,
+          navigate,
+          from: location.state?.from,
+        });
       }
     });
     return unsub;
-  }, [dispatch, navigate, location.state, existingCartId, useLocalCart]);
+    
+  }, [dispatch, navigate, location.state]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
-    
     if (!email || !password) {
       setError('Email and password are required.');
       return;
     }
-    
     setLoading(true);
-    
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
@@ -83,19 +94,35 @@ const Signup = () => {
       toast.success('Signup successful');
       dispatch(setCurrentUserId(user.uid));
 
-      // Only create API cart if not using local cart and no existing cart
-      if (!useLocalCart && !existingCartId) {
-        await createAndStoreCart(user.uid, dispatch, existingCartId);
+     
+      if (!existingCartId) {
+        try {
+          const resp = await fetch('https://fakestoreapi.com/carts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.uid,
+              date: new Date().toISOString().split('T')[0],
+              products: [],
+            }),
+          });
+          if (resp.ok) {
+            const cartData = await resp.json();
+            dispatch(setCartId(cartData.id));
+          } else {
+            console.warn('Failed to create cart:', resp.statusText);
+          }
+        } catch (err) {
+          console.warn('Error creating cart:', err);
+        }
       }
 
-      // Handle post-auth redirect
-      const intended = location.state?.intended;
-      if (intended?.action === 'add-to-cart') {
-        toast.success('You can now add items to cart.');
-        navigate(`/product/${intended.product.id}`);
-      } else {
-        navigate(location.state?.from || '/');
-      }
+      handlePostAuthIntent({
+        intended: location.state?.intended,
+        dispatch,
+        navigate,
+        from: location.state?.from,
+      });
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -155,24 +182,6 @@ const Signup = () => {
                   required
                   aria-label="Password"
                 />
-              </div>
-
-              <div className="mb-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="useLocalCart"
-                    checked={useLocalCart}
-                    onChange={(e) => dispatch(setUseLocalCart(e.target.checked))}
-                  />
-                  <label className="form-check-label" htmlFor="useLocalCart">
-                    Use Local Cart (recommended)
-                  </label>
-                  <small className="form-text text-muted d-block">
-                    Local cart works perfectly. Uncheck to use API mode.
-                  </small>
-                </div>
               </div>
 
               <button

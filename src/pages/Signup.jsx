@@ -1,139 +1,85 @@
-
-/**
- * Signup Page Component
- * 
- * Handles user registration with Firebase Auth.
- * Features:
- * - Email/password registration
- * - Cart mode toggle (local vs API)
- * - Post-signup cart initialization
- * - Redirect to intended page after signup
- */
 import React, { useState, useEffect } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-} from 'firebase/auth';
+import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useDispatch, useSelector } from 'react-redux';
-import { handlePostAuthIntent } from '../utils/handlePostAuthIntent';
 import Navbar from '../components/Navbar';
-import {
-  setCurrentUserId,
-  setCartId,
-  selectCartId,
-} from '../features/userCart/userCartSlice';
+import { createCart } from '../api/backendApi';
 
 const Signup = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const dispatch = useDispatch();
-
-  const existingCartId = useSelector(selectCartId);
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        dispatch(setCurrentUserId(user.uid));
-
-        if (!existingCartId) {
-          try {
-            const resp = await fetch('https://fakestoreapi.com/carts', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: user.uid,
-                date: new Date().toISOString().split('T')[0],
-                products: [],
-              }),
-            });
-            if (resp.ok) {
-              const cartData = await resp.json();
-              dispatch(setCartId(cartData.id));
-            } else {
-              console.warn('Failed to create cart on auth state change:', resp.statusText);
-            }
-          } catch (e) {
-            console.warn('Error creating cart on auth state change:', e);
-          }
-        }
-
-        handlePostAuthIntent({
-          intended: location.state?.intended,
-          dispatch,
-          navigate,
-          from: location.state?.from,
-        });
+        navigate('/', { replace: true });
       }
     });
-    return unsub;
-    
-  }, [dispatch, navigate, location.state]);
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    setError('');
-    if (!email || !password) {
-      setError('Email and password are required.');
+    
+    const { email, password, confirmPassword } = formData;
+    
+    if (!email || !password || !confirmPassword) {
+      toast.error('Please fill in all fields');
       return;
     }
-    setLoading(true);
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
     try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
-
-      toast.success('Signup successful');
-      dispatch(setCurrentUserId(user.uid));
-
-     
-      if (!existingCartId) {
-        try {
-          const resp = await fetch('https://fakestoreapi.com/carts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user.uid,
-              date: new Date().toISOString().split('T')[0],
-              products: [],
-            }),
-          });
-          if (resp.ok) {
-            const cartData = await resp.json();
-            dispatch(setCartId(cartData.id));
-          } else {
-            console.warn('Failed to create cart:', resp.statusText);
-          }
-        } catch (err) {
-          console.warn('Error creating cart:', err);
-        }
+      setLoading(true);
+      await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Create cart for new user
+      await createCart();
+      
+      toast.success('Account created successfully!');
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Signup error:', error);
+      let errorMessage = 'Signup failed';
+      
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'An account with this email already exists';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password is too weak';
+          break;
+        default:
+          errorMessage = error.message;
       }
-
-      handlePostAuthIntent({
-        intended: location.state?.intended,
-        dispatch,
-        navigate,
-        from: location.state?.from,
-      });
-    } catch (err) {
-      console.error(err);
-      if (err.code === 'auth/email-already-in-use') {
-        setError('Email already in use.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Invalid email address.');
-      } else if (err.code === 'auth/weak-password') {
-        setError('Password should be at least 6 characters.');
-      } else {
-        setError(err.message || 'Signup failed.');
-      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -142,70 +88,78 @@ const Signup = () => {
   return (
     <>
       <Navbar />
-      <div className="container my-5" style={{ maxWidth: 480 }}>
-        <div className="text-center mb-4">
-          <h1 className="fw-bold">Sign Up</h1>
-          <p className="text-muted">Create an account to continue shopping</p>
-        </div>
-
-        <div className="card shadow-sm">
-          <div className="card-body">
-            {error && <div className="alert alert-danger">{error}</div>}
-            <form onSubmit={handleSignup} noValidate>
-              <div className="mb-3">
-                <label htmlFor="signupEmail" className="form-label">
-                  Email
-                </label>
-                <input
-                  id="signupEmail"
-                  type="email"
-                  className="form-control"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  aria-label="Email"
-                />
+      <div className="container mt-5">
+        <div className="row justify-content-center">
+          <div className="col-md-6 col-lg-4">
+            <div className="card shadow">
+              <div className="card-body p-4">
+                <h2 className="card-title text-center mb-4">Sign Up</h2>
+                
+                <form onSubmit={handleSignup}>
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">Password</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      placeholder="Confirm your password"
+                      required
+                    />
+                  </div>
+                  
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary-custom w-100"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Creating Account...
+                      </>
+                    ) : (
+                      'Sign Up'
+                    )}
+                  </button>
+                </form>
+                
+                <div className="text-center mt-3">
+                  <p className="mb-0">
+                    Already have an account? <Link to="/login">Login here</Link>
+                  </p>
+                </div>
               </div>
-
-              <div className="mb-3">
-                <label htmlFor="signupPassword" className="form-label">
-                  Password
-                </label>
-                <input
-                  id="signupPassword"
-                  type="password"
-                  className="form-control"
-                  placeholder="Enter a strong password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  aria-label="Password"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary w-100"
-                disabled={loading}
-                aria-label="Sign Up"
-              >
-                {loading ? 'Signing up...' : 'Sign Up'}
-              </button>
-            </form>
-
-            <div className="text-center mt-3">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                state={{
-                  from: location.state?.from || '/',
-                  intended: location.state?.intended,
-                }}
-                className="text-decoration-none"
-              >
-                Log In
-              </Link>
             </div>
           </div>
         </div>

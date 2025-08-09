@@ -2,217 +2,280 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { setCurrentUserId, clearUserCart } from '../features/userCart/userCartSlice';
-import { useCartCount } from '../hooks/useCart';
-import { FaHeart, FaShoppingCart } from 'react-icons/fa';
+import { FaHeart, FaShoppingCart, FaUser } from 'react-icons/fa';
+import { initializeCart, getCartCount } from '../utils/cartService';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { cartCount } = useCartCount();
   const [user, setUser] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        dispatch(setCurrentUserId(u.uid));
+        try {
+          await initializeCart();
+          updateCartCount();
+        } catch (error) {
+          console.error('Cart initialization failed:', error);
+        }
       } else {
-        // Clear cart when user logs out
-        dispatch(clearUserCart());
+        setCartCount(0);
       }
     });
+
     return () => unsub();
-  }, [dispatch]);
+  }, []);
+
+  const updateCartCount = async () => {
+    try {
+      const count = await getCartCount();
+      setCartCount(count);
+    } catch (error) {
+      console.error('Failed to get cart count:', error);
+      setCartCount(0);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown')) {
+        setShowDropdown(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      updateCartCount();
+      const interval = setInterval(updateCartCount, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      dispatch(clearUserCart());
-      toast.success('Logged out');
-      navigate('/login');
-    } catch (err) {
-      console.error(err);
-      toast.error('Logout failed');
+      setUser(null);
+      setCartCount(0);
+      setShowDropdown(null);
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch (error) {
+      toast.error('Error logging out');
     }
   };
 
-  const dropdownData = {
-    men: {
-      title: 'MEN',
-      items: [
-        { category: 'Clothing', items: ['T-Shirts & Polos', 'Shirts', 'Jeans', 'Trousers'] },
-        { category: 'Footwear', items: ['Sneakers', 'Formal Shoes'] }
-      ]
-    },
-    women: {
-      title: 'WOMEN',
-      items: [
-        { category: 'Clothing', items: ['Dresses', 'Tops & Tees', 'Jeans', 'Ethnic Wear'] },
-        { category: 'Footwear', items: ['Heels', 'Flats'] }
-      ]
-    },
-    kids: {
-      title: 'KIDS',
-      items: [
-        { category: 'Boys', items: ['T-Shirts', 'Shirts', 'Jeans'] },
-        { category: 'Girls', items: ['Dresses', 'Tops'] }
-      ]
-    },
-    accessories: {
-      title: 'ACCESSORIES',
-      items: [
-        { category: 'Bags', items: ['Handbags', 'Backpacks', 'Wallets'] },
-        { category: 'Jewelry', items: ['Watches', 'Sunglasses'] }
-      ]
-    }
+  const toggleDropdown = (dropdown) => {
+    setShowDropdown(showDropdown === dropdown ? null : dropdown);
   };
 
   return (
-    <nav className="navbar-custom" style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'space-between',
-      width: '100%'
-    }}>
-      {/* Left side - Logo and Navigation - All in one line */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-        <Link to="/" className="navbar-brand">
-          AJIO Clone
-        </Link>
-        
-        {/* Navigation with dropdowns */}
-        {Object.entries(dropdownData).map(([key, data]) => (
-          <div 
-            key={key}
-            style={{ position: 'relative' }}
-            onMouseEnter={() => setShowDropdown(key)}
-            onMouseLeave={() => setShowDropdown(null)}
+    <>
+      {/* Golden Sale Banner */}
+      <div 
+        className="text-center py-2"
+        style={{ 
+          background: 'linear-gradient(135deg, var(--color-accent) 0%, #f0c832 100%)',
+          color: 'var(--color-primary)',
+          fontWeight: '600',
+          fontSize: '0.9rem'
+        }}
+      >
+        🔥 MEGA SALE: Up to 70% OFF on Fashion & Lifestyle! Limited Time Only! 🔥
+      </div>
+
+      <nav className="navbar navbar-expand-lg navbar-custom">
+        <div className="container-fluid">
+          <Link className="navbar-brand" to="/">
+            AJIO
+          </Link>
+
+          <button 
+            className="navbar-toggler" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            style={{ 
+              background: 'none', 
+              border: '1px solid #e8d9ec', 
+              color: '#e8d9ec',
+              padding: '4px 8px'
+            }}
           >
-            <span className="nav-link" style={{ cursor: 'pointer' }}>
-              {data.title}
-            </span>
-            {showDropdown === key && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                background: 'var(--color-card)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius)',
-                padding: '1rem',
-                minWidth: '200px',
-                zIndex: 1000,
-                boxShadow: 'var(--shadow)'
-              }}>
-                {data.items.map((section, idx) => (
-                  <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                    <div style={{ 
-                      fontWeight: '600', 
-                      color: 'var(--color-primary)',
-                      marginBottom: '0.25rem'
-                    }}>
-                      {section.category}
-                    </div>
-                    {section.items.map((item, itemIdx) => (
-                      <div key={itemIdx} style={{
-                        padding: '0.25rem 0',
-                        color: '#5f4d6a',
-                        fontSize: '0.9rem',
-                        cursor: 'pointer'
-                      }}>
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
+            ☰
+          </button>
+
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <ul className="navbar-nav me-auto">
+              <li className="nav-item">
+                <Link className="nav-link" to="/">Home</Link>
+              </li>
+              
+              <li className="nav-item dropdown position-relative">
+                <a 
+                  className="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleDropdown('men');
+                  }}
+                >
+                  Men
+                </a>
+                <ul 
+                  className={`dropdown-menu ${showDropdown === 'men' ? 'show' : ''}`}
+                  style={{ 
+                    display: showDropdown === 'men' ? 'block' : 'none',
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    zIndex: 1000
+                  }}
+                >
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Clothing</span></li>
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Shoes</span></li>
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Accessories</span></li>
+                </ul>
+              </li>
+              
+              <li className="nav-item dropdown position-relative">
+                <a 
+                  className="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleDropdown('women');
+                  }}
+                >
+                  Women
+                </a>
+                <ul 
+                  className={`dropdown-menu ${showDropdown === 'women' ? 'show' : ''}`}
+                  style={{ 
+                    display: showDropdown === 'women' ? 'block' : 'none',
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    zIndex: 1000
+                  }}
+                >
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Clothing</span></li>
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Shoes</span></li>
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Accessories</span></li>
+                </ul>
+              </li>
+              
+              <li className="nav-item dropdown position-relative">
+                <a 
+                  className="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleDropdown('kids');
+                  }}
+                >
+                  Kids
+                </a>
+                <ul 
+                  className={`dropdown-menu ${showDropdown === 'kids' ? 'show' : ''}`}
+                  style={{ 
+                    display: showDropdown === 'kids' ? 'block' : 'none',
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    zIndex: 1000
+                  }}
+                >
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Clothing</span></li>
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Shoes</span></li>
+                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Accessories</span></li>
+                </ul>
+              </li>
+            </ul>
+
+            <ul className="navbar-nav">
+              <li className="nav-item">
+                <Link className="nav-link position-relative" to="/wishlist">
+                  <FaHeart />
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    0
+                  </span>
+                </Link>
+              </li>
+              
+              <li className="nav-item">
+                <Link className="nav-link position-relative" to="/cart">
+                  <FaShoppingCart />
+                  {cartCount > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill" 
+                          style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-primary)' }}>
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+
+              {user ? (
+                <li className="nav-item dropdown position-relative">
+                  <a 
+                    className="nav-link dropdown-toggle d-flex align-items-center"
+                    href="#"
+                    role="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleDropdown('user');
+                    }}
+                  >
+                    <FaUser className="me-1" />
+                    {user.email?.split('@')[0]}
+                  </a>
+                  <ul 
+                    className={`dropdown-menu dropdown-menu-end ${showDropdown === 'user' ? 'show' : ''}`}
+                    style={{ 
+                      display: showDropdown === 'user' ? 'block' : 'none',
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      zIndex: 1000
+                    }}
+                  >
+                    <li><Link className="dropdown-item" to="/profile">Profile</Link></li>
+                    <li><Link className="dropdown-item" to="/orders">Orders</Link></li>
+                    <li><hr className="dropdown-divider" /></li>
+                    <li>
+                      <button className="dropdown-item text-danger" onClick={handleLogout}>
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                </li>
+              ) : (
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/login">Login</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/signup">Signup</Link>
+                  </li>
+                </>
+              )}
+            </ul>
           </div>
-        ))}
-      </div>
-
-      {/* Right side - Icons and User - All in one line */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        {/* Wishlist Icon */}
-        <Link 
-          to="/wishlist" 
-          className="nav-link" 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            position: 'relative'
-          }}
-          title="Wishlist"
-        >
-          <FaHeart size={18} />
-        </Link>
-
-        {/* Cart Icon */}
-        <Link 
-          to="/cart" 
-          className="nav-link" 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            position: 'relative'
-          }}
-          title="Shopping Cart"
-        >
-          <FaShoppingCart size={18} />
-          {cartCount > 0 && (
-            <span className="badge-cart">
-              {cartCount}
-            </span>
-          )}
-        </Link>
-
-        {/* User Authentication */}
-        {user ? (
-          <>
-            <span style={{ 
-              fontWeight: 500, 
-              color:'#e8d9ec',
-              fontSize: '0.9rem',
-              whiteSpace: 'nowrap'
-            }}>
-              Hi, {user.email ? user.email.split('@')[0] : 'User'}
-            </span>
-            <button 
-              className="btn-outline" 
-              onClick={handleLogout}
-              style={{ 
-                padding: '0.4rem 0.8rem', 
-                fontSize: '0.85rem',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" className="nav-link" style={{ whiteSpace: 'nowrap' }}>
-              Log In
-            </Link>
-            <Link 
-              to="/signup" 
-              className="btn-primary-custom" 
-              style={{ 
-                padding: '0.4rem 0.8rem',
-                fontSize: '0.85rem',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              Sign Up
-            </Link>
-          </>
-        )}
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </>
   );
 };
 

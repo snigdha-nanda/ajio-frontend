@@ -137,7 +137,6 @@ const Carousel = () => {
 
       {/* Prev/Next controls */}
       <button
-        onClick={() => setCurrent((current - 1 + length) % length)}
         style={{
           position: 'absolute',
           top: '50%',
@@ -149,20 +148,18 @@ const Carousel = () => {
           border: '2px solid var(--color-accent)',
           background: 'var(--color-card)',
           color: 'var(--color-primary)',
-          cursor: 'pointer',
+          cursor: 'default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontSize: '1.2rem',
-          transition: 'var(--transition)'
+          transition: 'var(--transition)',
+          pointerEvents: 'none'
         }}
-        onMouseOver={(e) => e.target.style.background = 'var(--color-accent)'}
-        onMouseOut={(e) => e.target.style.background = 'var(--color-card)'}
       >
         <FaChevronLeft />
       </button>
       <button
-        onClick={() => setCurrent((current + 1) % length)}
         style={{
           position: 'absolute',
           top: '50%',
@@ -174,15 +171,14 @@ const Carousel = () => {
           border: '2px solid var(--color-accent)',
           background: 'var(--color-card)',
           color: 'var(--color-primary)',
-          cursor: 'pointer',
+          cursor: 'default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontSize: '1.2rem',
-          transition: 'var(--transition)'
+          transition: 'var(--transition)',
+          pointerEvents: 'none'
         }}
-        onMouseOver={(e) => e.target.style.background = 'var(--color-accent)'}
-        onMouseOut={(e) => e.target.style.background = 'var(--color-card)'}
       >
         <FaChevronRight />
       </button>
@@ -199,15 +195,15 @@ const Carousel = () => {
         {slides.map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrent(index)}
             style={{
               width: '12px',
               height: '12px',
               borderRadius: '50%',
               border: 'none',
               background: current === index ? 'var(--color-accent)' : 'var(--color-border)',
-              cursor: 'pointer',
-              transition: 'var(--transition)'
+              cursor: 'default',
+              transition: 'var(--transition)',
+              pointerEvents: 'none'
             }}
           />
         ))}

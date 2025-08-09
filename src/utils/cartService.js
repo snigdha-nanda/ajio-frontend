@@ -1,80 +1,74 @@
-/**
- * Cart Service - Unified cart management
- * 
- * This service provides a unified interface for cart operations
- * that works with both local cart (Redux) and API cart modes.
- * 
- * Features:
- * - Add items to cart
- * - Remove items from cart
- * - Update item quantities
- * - Get cart items and count
- * - Supports both local and API modes
- */
+// Cart Service - Handles all cart operations with backend
+import { createCart, fetchCart, fetchCartItems, updateCartItem, deleteCartItem, fetchProductById } from '../api/backendApi';
 
-import { addItemToCart, fetchCart, removeItemFromCart, setItemQuantity } from '../api/fakeStoreCart';
-import { addToLocalCart, removeFromLocalCart, updateLocalCartQuantity } from '../features/userCart/userCartSlice';
+let userCartId = null; // Store current user's cart ID
 
-export class CartService {
-  constructor(useLocalCart, dispatch, cartId, userId, localCartItems) {
-    this.useLocalCart = useLocalCart;
-    this.dispatch = dispatch;
-    this.cartId = cartId;
-    this.userId = userId;
-    this.localCartItems = localCartItems || [];
-  }
-
-  // Add item to cart
-  async addItem(productId, quantity = 1) {
-    if (this.useLocalCart) {
-      // Local cart: store in Redux
-      this.dispatch(addToLocalCart({ productId, quantity }));
-      return Promise.resolve();
-    } else {
-      // API cart: call FakeStore API
-      return addItemToCart(this.cartId, this.userId, { productId, quantity });
+// Initialize cart for logged-in user
+export const initializeCart = async () => {
+  try {
+    // Try to get existing cart
+    const { cartId } = await fetchCart();
+    userCartId = cartId;
+    return cartId;
+  } catch (error) {
+    // If no cart exists, create a new one
+    if (error.message.includes('Cart not found')) {
+      const { cartId } = await createCart();
+      userCartId = cartId;
+      return cartId;
     }
+    throw error;
   }
+};
 
-  // Remove item from cart
-  async removeItem(productId) {
-    if (this.useLocalCart) {
-      // Local cart: remove from Redux
-      this.dispatch(removeFromLocalCart(productId));
-      return Promise.resolve();
-    } else {
-      // API cart: call FakeStore API
-      return removeItemFromCart(this.cartId, this.userId, productId);
-    }
-  }
+// Get all items in user's cart
+export const getCartItems = async () => {
+  if (!userCartId) await initializeCart();
+  
+  // Get cart items from backend
+  const items = await fetchCartItems(userCartId);
+  
+  // Get product details for each cart item
+  const cartItems = await Promise.all(
+    items.map(async (item) => {
+      const product = await fetchProductById(item.product_id);
+      return {
+        id: item.product_id,
+        title: product.title,
+        price: product.discounted_price,
+        image: product.image_path,
+        quantity: item.quantity
+      };
+    })
+  );
+  
+  return cartItems;
+};
 
-  // Update item quantity
-  async updateQuantity(productId, quantity) {
-    if (this.useLocalCart) {
-      // Local cart: update in Redux
-      this.dispatch(updateLocalCartQuantity({ productId, quantity }));
-      return Promise.resolve();
-    } else {
-      // API cart: call FakeStore API
-      return setItemQuantity(this.cartId, this.userId, productId, quantity);
-    }
-  }
+// Add product to cart
+export const addToCart = async (productId, quantity = 1) => {
+  if (!userCartId) await initializeCart();
+  await updateCartItem(userCartId, productId, quantity);
+};
 
-  // Get cart items
-  async getCartItems() {
-    if (this.useLocalCart) {
-      // Local cart: return from Redux state
-      return Promise.resolve(this.localCartItems || []);
-    } else {
-      // API cart: fetch from FakeStore API
-      const cart = await fetchCart(this.cartId);
-      return cart.products;
-    }
-  }
+// Update quantity of existing cart item
+export const updateQuantity = async (productId, quantity) => {
+  if (!userCartId) await initializeCart();
+  await updateCartItem(userCartId, productId, quantity);
+};
 
-  // Get cart count (total items)
-  async getCartCount() {
-    const items = await this.getCartItems();
-    return items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+// Remove item completely from cart
+export const removeFromCart = async (productId) => {
+  if (!userCartId) await initializeCart();
+  await deleteCartItem(userCartId, productId);
+};
+
+// Get total number of items in cart
+export const getCartCount = async () => {
+  try {
+    const items = await getCartItems();
+    return items.reduce((total, item) => total + item.quantity, 0);
+  } catch {
+    return 0;
   }
-}
+};

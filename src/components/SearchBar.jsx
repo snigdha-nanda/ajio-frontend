@@ -1,16 +1,6 @@
-/**
- * SearchBar Component
- * 
- * Provides real-time product search functionality with dropdown results.
- * Features:
- * - Shows all products by default when focused
- * - Filters products as user types
- * - Click on any result to navigate to product detail page
- * - Clear search functionality
- */
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchProducts } from '../api/backendApi';
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,13 +10,11 @@ const SearchBar = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
         setLoading(true);
-        const res = await fetch('https://fakestoreapi.com/products');
-        const data = await res.json();
+        const data = await fetchProducts();
         setAllProducts(data);
         setSearchResults(data); 
       } catch (err) {
@@ -38,16 +26,14 @@ const SearchBar = () => {
     fetchAllProducts();
   }, []);
 
-  
   useEffect(() => {
     if (searchTerm.trim() === '') {
-      
       setSearchResults(allProducts);
       return;
     }
 
     const filtered = allProducts.filter(product =>
-      product.title.toLowerCase().includes(searchTerm.toLowerCase())
+      product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
     setSearchResults(filtered);
@@ -73,7 +59,6 @@ const SearchBar = () => {
   };
 
   const handleInputBlur = () => {
-    
     setTimeout(() => setShowDropdown(false), 200);
   };
 
@@ -102,7 +87,6 @@ const SearchBar = () => {
         )}
       </div>
 
-      {/* Search Results Dropdown */}
       {showDropdown && (
         <div 
           style={{ 
@@ -139,7 +123,7 @@ const SearchBar = () => {
                 >
                   <img
                     src={product.image}
-                    alt={product.title}
+                    alt={product.name}
                     style={{ 
                       width: '40px', 
                       height: '40px', 
@@ -153,13 +137,7 @@ const SearchBar = () => {
                       fontSize: '14px',
                       color: 'var(--color-primary)'
                     }}>
-                      {product.title.length > 50 ? product.title.substring(0, 50) + '...' : product.title}
-                    </div>
-                    <div style={{ 
-                      color: '#5f4d6a', 
-                      fontSize: '12px'
-                    }}>
-                      ${product.price} • {product.category}
+                      {product.name.length > 50 ? product.name.substring(0, 50) + '...' : product.name}
                     </div>
                   </div>
                 </div>

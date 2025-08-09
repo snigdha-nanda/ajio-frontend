@@ -11,14 +11,22 @@ const ProductCard = ({ product }) => {
         onClick={() => navigate(`/product/${product.id}`)}
         style={{ cursor: 'pointer' }}
       >
-        <img src={product.image} alt={product.title} />
+        <img src={product.image} alt={product.name} />
       </div>
 
       <div className="card-body">
-        <div className="product-title">{product.title}</div>
-        <div className="product-price">${product.price.toFixed(2)}</div>
+        <div className="product-title">{product.name}</div>
+        {product.shortDescription && (
+          <div className="text-muted small mb-2">{product.shortDescription}</div>
+        )}
+        <div className="d-flex align-items-center gap-2 mb-2">
+          <span className="fw-bold">₹{product.price}</span>
+          {product.actualPrice && product.actualPrice > product.price && (
+            <span className="text-decoration-line-through text-muted">₹{product.actualPrice}</span>
+          )}
+        </div>
         <button
-          className="btn-primary-custom"
+          className="btn-primary-custom w-100"
           onClick={() => navigate(`/product/${product.id}`)}
         >
           View Details

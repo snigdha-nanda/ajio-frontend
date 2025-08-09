@@ -1,8 +1,10 @@
 
+// Firebase Configuration - Authentication setup
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+// Firebase project configuration
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -12,9 +14,9 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
-
-console.log('Firebase config loaded:', firebaseConfig);
-
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Export Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);

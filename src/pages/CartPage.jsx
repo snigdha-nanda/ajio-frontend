@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import Navbar from '../components/Navbar';
 import ConfigModal from '../components/ConfigModal';
-import { getCartItems, updateQuantity, removeFromCart } from '../utils/cartService';
+import { getCartItems, updateQuantity, removeFromCart, clearCart } from '../utils/cartService';
+import { createOrder } from '../api/backendApi';
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -162,13 +163,31 @@ const CartPage = () => {
     
     setPaymentProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Create order in database
+      const orderItems = cartItems.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price
+      }));
+      
+      await createOrder(orderItems, calculateTotal());
+      
+      // Clear cart from backend
+      await clearCart();
+      
+      // Simulate payment processing delay
+      setTimeout(() => {
+        setPaymentProcessing(false);
+        setShowPaymentModal(false);
+        toast.success('Payment successful! Order placed.');
+        setCartItems([]); // Clear local cart state
+      }, 2000);
+    } catch (error) {
       setPaymentProcessing(false);
-      setShowPaymentModal(false);
-      toast.success('Payment successful! Order placed.');
-      setCartItems([]); // Clear cart after successful payment
-    }, 2000);
+      console.error('Failed to create order:', error);
+      toast.error('Payment failed. Please try again.');
+    }
   };
 
   if (loading) {

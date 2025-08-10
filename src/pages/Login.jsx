@@ -5,6 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar';
 import { initializeCart } from '../utils/cartService';
+import { fetchProfile } from '../api/backendApi';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,7 +36,8 @@ const Login = () => {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
       
-      // Initialize cart after successful login
+      // Check and create profile if not present, then initialize cart
+      await fetchProfile(); // This will auto-create profile if doesn't exist
       await initializeCart();
       
       toast.success('Login successful!');

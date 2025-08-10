@@ -4,7 +4,7 @@ import { auth } from '../firebase';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar';
-import { createCart } from '../api/backendApi';
+import { createCart, fetchProfile } from '../api/backendApi';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -56,7 +56,8 @@ const Signup = () => {
       setLoading(true);
       await createUserWithEmailAndPassword(auth, email, password);
       
-      // Create cart for new user
+      // Create profile and cart for new user
+      await fetchProfile(); // This will auto-create profile if doesn't exist
       await createCart();
       
       toast.success('Account created successfully!');

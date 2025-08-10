@@ -142,9 +142,9 @@ const Navbar = () => {
                     zIndex: 1000
                   }}
                 >
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Clothing</span></li>
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Shoes</span></li>
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Accessories</span></li>
+                  <li><Link className="dropdown-item" to="/men/clothing" onClick={() => setShowDropdown(null)}>Clothing</Link></li>
+                  <li><Link className="dropdown-item" to="/men/shoes" onClick={() => setShowDropdown(null)}>Shoes</Link></li>
+                  <li><Link className="dropdown-item" to="/men/accessories" onClick={() => setShowDropdown(null)}>Accessories</Link></li>
                 </ul>
               </li>
               
@@ -170,9 +170,9 @@ const Navbar = () => {
                     zIndex: 1000
                   }}
                 >
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Clothing</span></li>
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Shoes</span></li>
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Accessories</span></li>
+                  <li><Link className="dropdown-item" to="/women/clothing" onClick={() => setShowDropdown(null)}>Clothing</Link></li>
+                  <li><Link className="dropdown-item" to="/women/shoes" onClick={() => setShowDropdown(null)}>Shoes</Link></li>
+                  <li><Link className="dropdown-item" to="/women/accessories" onClick={() => setShowDropdown(null)}>Accessories</Link></li>
                 </ul>
               </li>
               
@@ -198,22 +198,23 @@ const Navbar = () => {
                     zIndex: 1000
                   }}
                 >
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Clothing</span></li>
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Shoes</span></li>
-                  <li><span className="dropdown-item" style={{ cursor: 'default' }}>Accessories</span></li>
+                  <li><Link className="dropdown-item" to="/kids/clothing" onClick={() => setShowDropdown(null)}>Clothing</Link></li>
+                  <li><Link className="dropdown-item" to="/kids/shoes" onClick={() => setShowDropdown(null)}>Shoes</Link></li>
+                  <li><Link className="dropdown-item" to="/kids/accessories" onClick={() => setShowDropdown(null)}>Accessories</Link></li>
                 </ul>
               </li>
             </ul>
 
             <ul className="navbar-nav">
-              <li className="nav-item">
+              {/* Wishlist disabled for now */}
+              {/* <li className="nav-item">
                 <Link className="nav-link position-relative" to="/wishlist">
                   <FaHeart />
                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                     0
                   </span>
                 </Link>
-              </li>
+              </li> */}
               
               <li className="nav-item">
                 <Link className="nav-link position-relative" to="/cart">

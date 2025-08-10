@@ -1,6 +1,6 @@
 import { auth } from '../firebase';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || 'https://ajio-backend-api.netlify.app/.netlify/functions';
+const API_BASE = process.env.REACT_APP_BACKEND_URL || 'https://ajio-backend.netlify.app/.netlify/functions';
 
 const getAuthHeaders = async () => {
   try {
